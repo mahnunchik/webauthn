@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>WebAuthn Test Page</title>
+  </head>
+  <body style="padding: 20px;">
+    <h1>WebAuthn Test</h1>
+    <p id="supports"></p>
+
+    <button onclick="attestation()">Attestation</button>
+    <p id="attestation">Attestation?</p>
+    <pre><code id="attestation-data"></code></pre>
+
+    <p>ID: <code id="id"></code></p>
+
+    <button onclick="assertion()">Assertion</button>
+    <p id="assertion">Assertion?</p>
+    <pre><code id="assertion-data"></code></pre>
+
+    <script>
+      function toUint8Array(value){
+        return Uint8Array.from(value, c => c.charCodeAt(0));
+      }
+
+      function arrayBufferToJSON(buffer) {
+        return JSON.parse(String.fromCharCode.apply(null, new Uint8Array(buffer)));
+      }
+
+      function arrayBufferToBase64URLString(buffer) {
+        return btoa(String.fromCharCode.apply(null, buffer))
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=/g, '');
+      }
+
+      if (window.PublicKeyCredential !== undefined && typeof window.PublicKeyCredential === 'function') {
+        document.getElementById('supports').textContent = 'WebAuthn supported';
+      } else {
+        document.getElementById('supports').textContent = 'WebAuthn not supported';
+      }
+
+      let id;
+
+      async function attestation() {
+        const challenge = new Uint8Array(16);
+        window.crypto.getRandomValues(challenge);
+        console.log('attestation challenge:', arrayBufferToBase64URLString(challenge));
+
+        const publicKeyCredentialCreationOptions = {
+          challenge,
+          rp: {
+            name: 'Test Company',
+          },
+          user: {
+            id: toUint8Array('12345'),
+            name: 'user',
+            displayName: 'User',
+          },
+          pubKeyCredParams: [{
+            alg: -7,
+            type: 'public-key',
+          }],
+          authenticatorSelection: {
+            authenticatorAttachment: 'cross-platform',
+          },
+          attestation: 'none',
+        };
+
+        const credential = await navigator.credentials.create({
+          publicKey: publicKeyCredentialCreationOptions
+        });
+
+        console.log('attestation:', credential);
+
+        id = credential.rawId;
+
+        document.getElementById('id').textContent = credential.id;
+        document.getElementById('attestation').textContent = `Attestation supported, challenge: ${arrayBufferToBase64URLString(challenge)}`;
+        document.getElementById('attestation-data').textContent = JSON.stringify(arrayBufferToJSON(credential.response.clientDataJSON), null, '  ')
+      }
+
+      async function assertion() {
+        const challenge = new Uint8Array(16);
+        window.crypto.getRandomValues(challenge);
+        console.log('assertion challenge:', arrayBufferToBase64URLString(challenge));
+
+        const publicKeyCredentialRequestOptions = {
+          challenge,
+          allowCredentials: [{
+            id,
+            type: 'public-key',
+          }],
+        };
+
+        const credential = await navigator.credentials.get({
+          publicKey: publicKeyCredentialRequestOptions
+        });
+
+        console.log('assertion:', credential);
+
+        document.getElementById('assertion').textContent = `Assertion supported, challenge: ${arrayBufferToBase64URLString(challenge)}`;
+        document.getElementById('assertion-data').textContent = JSON.stringify(arrayBufferToJSON(credential.response.clientDataJSON), null, '  ')
+      }
+    </script>
+  </body>
+</html>
