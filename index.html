@@ -7,6 +7,7 @@
   <body style="padding: 20px;">
     <h1>WebAuthn Test</h1>
     <p id="supports"></p>
+    <p id="secure"></p>
 
     <button onclick="attestation()">Attestation</button>
     <p id="attestation">Attestation?</p>
@@ -38,6 +39,14 @@
         document.getElementById('supports').textContent = 'WebAuthn supported';
       } else {
         document.getElementById('supports').textContent = 'WebAuthn not supported';
+      }
+
+      console.log('isSecureContext:', window.isSecureContext);
+
+      if (window.isSecureContext === true) {
+        document.getElementById('secure').textContent = 'Context is secure';
+      } else {
+        document.getElementById('secure').textContent = 'Context is not secure';
       }
 
       let id;
@@ -81,6 +90,11 @@
       }
 
       async function assertion() {
+        if (!id) {
+          alert('You have to attestate first');
+          return;
+        }
+
         const challenge = new Uint8Array(16);
         window.crypto.getRandomValues(challenge);
         console.log('assertion challenge:', arrayBufferToBase64URLString(challenge));
