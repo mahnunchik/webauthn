@@ -89,9 +89,49 @@
             name: 'user',
             displayName: 'User',
           },
+          // YubiKeys currently support RS256 (Firmware 5.1.X and below only),
+          // EdDSA, ES256, and Ed25519 (Firmware 5.2.X and above only).
+          // Windows Hello only supports RS256 (alg -257) as its public key algorithm.
           pubKeyCredParams: [{
-            alg: -7,
-            type: 'public-key',
+            'type': 'public-key',
+            // ES256
+            'alg': -7
+          }, {
+            'type': 'public-key',
+            // ES384
+            'alg': -35
+          }, {
+            'type': 'public-key',
+            // ES512
+            'alg': -36
+          }, {
+            'type': 'public-key',
+            // PS256
+            'alg': -37
+          }, {
+            'type': 'public-key',
+            // PS384
+            'alg': -38
+          }, {
+            'type': 'public-key',
+            // PS512
+            'alg': -39
+          }, {
+            'type': 'public-key',
+            // EdDSA
+            'alg': -8
+          }, {
+            'type': 'public-key',
+            // RS256 (not recommended)
+            'alg': -257
+          }, {
+            'type': 'public-key',
+            // RS384 (not recommended)
+            'alg': -258
+          }, {
+            'type': 'public-key',
+            // RS512 (not recommended)
+            'alg': -259
           }],
           attestation: selected('attestation'),
         };
