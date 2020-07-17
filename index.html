@@ -9,14 +9,32 @@
     <p id="supports"></p>
     <p id="secure"></p>
 
+    <p>
+      <span>Authenticator Type</span>
+      <select id="authenticator">
+        <option value="any" selected="selected">any</option>
+        <option value="platform">platform - built into a device</option>
+        <option value="cross-platform">cross-platform - USB, NFC, or BLE</option>
+      </select>
+    </p>
+
+    <p>
+      <span>Attestation Type</span>
+      <select id="attestation">
+        <option value="none" selected="none">none</option>
+        <option value="indirect">indirect</option>
+        <option value="direct">direct</option>
+      </select>
+    </p>
+
     <button onclick="attestation()">Attestation</button>
-    <p id="attestation">Attestation?</p>
+    <p id="attestation-res">Attestation?</p>
     <pre><code id="attestation-data"></code></pre>
 
     <p>ID: <code id="id"></code></p>
 
     <button onclick="assertion()">Assertion</button>
-    <p id="assertion">Assertion?</p>
+    <p id="assertion-res">Assertion?</p>
     <pre><code id="assertion-data"></code></pre>
 
     <script>
@@ -33,6 +51,11 @@
           .replace(/\+/g, '-')
           .replace(/\//g, '_')
           .replace(/=/g, '');
+      }
+
+      function selected(id) {
+        const e = document.getElementById(id);
+        return e.options[e.selectedIndex].value;
       }
 
       if (window.PublicKeyCredential !== undefined && typeof window.PublicKeyCredential === 'function') {
@@ -70,23 +93,37 @@
             alg: -7,
             type: 'public-key',
           }],
-          /*authenticatorSelection: {
-            authenticatorAttachment: 'cross-platform',
-          },*/
-          attestation: 'none',
+          attestation: selected('attestation'),
         };
 
-        const credential = await navigator.credentials.create({
-          publicKey: publicKeyCredentialCreationOptions
-        });
+        const authenticator = selected('authenticator');
+        if (authenticator !== 'any') {
+          publicKeyCredentialCreationOptions.authenticatorSelection = {
+            authenticatorAttachment: authenticator,
+          };
+        }
 
-        console.log('attestation:', credential);
+        console.log('publicKeyCredentialCreationOptions:', publicKeyCredentialCreationOptions);
 
-        id = credential.rawId;
+        try {
+          const credential = await navigator.credentials.create({
+            publicKey: publicKeyCredentialCreationOptions,
+          });
 
-        document.getElementById('id').textContent = credential.id;
-        document.getElementById('attestation').textContent = `Attestation supported, challenge: ${arrayBufferToBase64URLString(challenge)}`;
-        document.getElementById('attestation-data').textContent = JSON.stringify(arrayBufferToJSON(credential.response.clientDataJSON), null, '  ')
+          console.log('attestation:', credential);
+
+          id = credential.rawId;
+
+          document.getElementById('id').textContent = credential.id;
+          document.getElementById('attestation-res').textContent = `Attestation supported, challenge: ${arrayBufferToBase64URLString(challenge)}`;
+          document.getElementById('attestation-data').textContent = JSON.stringify(arrayBufferToJSON(credential.response.clientDataJSON), null, '  ');
+        } catch (err) {
+          console.error('attestation error:', err);
+
+          document.getElementById('id').textContent = '';
+          document.getElementById('attestation-res').textContent = `Attestation error: ${err.message}`;
+          document.getElementById('attestation-data').textContent = err;
+        }
       }
 
       async function assertion() {
@@ -107,14 +144,23 @@
           }],
         };
 
-        const credential = await navigator.credentials.get({
-          publicKey: publicKeyCredentialRequestOptions
-        });
+        console.log('publicKeyCredentialRequestOptions:', publicKeyCredentialRequestOptions);
 
-        console.log('assertion:', credential);
+        try {
+          const credential = await navigator.credentials.get({
+            publicKey: publicKeyCredentialRequestOptions
+          });
 
-        document.getElementById('assertion').textContent = `Assertion supported, challenge: ${arrayBufferToBase64URLString(challenge)}`;
-        document.getElementById('assertion-data').textContent = JSON.stringify(arrayBufferToJSON(credential.response.clientDataJSON), null, '  ')
+          console.log('assertion:', credential);
+
+          document.getElementById('assertion-res').textContent = `Assertion supported, challenge: ${arrayBufferToBase64URLString(challenge)}`;
+          document.getElementById('assertion-data').textContent = JSON.stringify(arrayBufferToJSON(credential.response.clientDataJSON), null, '  ');
+        } catch (err) {
+          console.error('assertion error:', err);
+
+          document.getElementById('assertion-res').textContent = `Assertion error: ${err.message}`;
+          document.getElementById('assertion-data').textContent = err;
+        }
       }
     </script>
   </body>
