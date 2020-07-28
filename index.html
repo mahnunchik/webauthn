@@ -27,7 +27,8 @@
     <p>
       <span>Attestation Type</span>
       <select id="attestation">
-        <option value="none" selected="none">none</option>
+        <option value="undefined" selected="selected">undefined</option>
+        <option value="none">none</option>
         <option value="indirect">indirect</option>
         <option value="direct">direct</option>
       </select>
@@ -153,7 +154,6 @@
             // RS512 (not recommended)
             'alg': -259
           }],
-          attestation: selected('attestation'),
         };
 
         const authenticator = selected('authenticator');
@@ -161,6 +161,11 @@
           publicKeyCredentialCreationOptions.authenticatorSelection = {
             authenticatorAttachment: authenticator,
           };
+        }
+
+        const attestation = selected('attestation');
+        if (attestation !== 'undefined') {
+          publicKeyCredentialCreationOptions.attestation = attestation;
         }
 
         console.log('publicKeyCredentialCreationOptions:', publicKeyCredentialCreationOptions);
