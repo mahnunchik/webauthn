@@ -7,10 +7,11 @@
     <style>
       body {
         font-family: sans-serif;
+        padding: 20px;
       }
     </style>
   </head>
-  <body style="padding: 20px;">
+  <body>
     <h1>WebAuthn Test</h1>
     <p id="supports"></p>
     <p id="secure"></p>
@@ -45,8 +46,10 @@
     <pre><code id="assertion-data"></code></pre>
 
     <script>
-      function toUint8Array(value){
-        return Uint8Array.from(value, c => c.charCodeAt(0));
+      function hexToBuffer(string) {
+        return new Uint8Array(string.match(/[\dA-F]{2}/gi)
+          .map(item => parseInt(item, 16))
+        );
       }
 
       function arrayBufferToJSON(buffer) {
@@ -102,11 +105,13 @@
 
         const publicKeyCredentialCreationOptions = {
           challenge,
+          timeout: 60 * 1000,
           rp: {
+            id: window.location.hostname,
             name: 'Test Company',
           },
           user: {
-            id: toUint8Array('12345'),
+            id: hexToBuffer('1234567890abcdef'),
             name: 'user',
             displayName: 'User',
           },
@@ -201,6 +206,7 @@
 
         const publicKeyCredentialRequestOptions = {
           challenge,
+          timeout: 60 * 1000,
           allowCredentials: [{
             id: base64URLStringToArrayBuffer(document.getElementById('id').value),
             type: 'public-key',
