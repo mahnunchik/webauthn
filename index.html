@@ -45,6 +45,15 @@
       </select>
     </p>
 
+    <p>
+      <span>Require Resident Key</span>
+      <select id="residentkey">
+        <option value="undefined" selected="selected">undefined</option>
+        <option value="false">false</option>
+        <option value="true">true</option>
+      </select>
+    </p>
+
     <button onclick="attestation()">Attestation</button>
     <p id="attestation-res">Attestation?</p>
     <pre><code id="attestation-data"></code></pre>
@@ -176,16 +185,26 @@
 
         const authenticator = selected('authenticator');
         if (authenticator !== 'any') {
-          publicKeyCredentialCreationOptions
-            .authenticatorSelection.
-            authenticatorAttachment = authenticator;
+          publicKeyCredentialCreationOptions.authenticatorSelection = {
+            ...publicKeyCredentialCreationOptions.authenticatorSelection,
+            authenticatorAttachment: authenticator,
+          };
         }
 
         const verification = selected('verification');
         if (verification !== 'undefined') {
-          publicKeyCredentialCreationOptions
-            .authenticatorSelection.
-            userVerification = verification;
+          publicKeyCredentialCreationOptions.authenticatorSelection = {
+            ...publicKeyCredentialCreationOptions.authenticatorSelection,
+            userVerification: verification,
+          };
+        }
+
+        const residentkey = selected('residentkey');
+        if (residentkey !== 'undefined') {
+          publicKeyCredentialCreationOptions.authenticatorSelection = {
+            ...publicKeyCredentialCreationOptions.authenticatorSelection,
+            requireResidentKey: residentkey === 'true',
+          };
         }
 
         const attestation = selected('attestation');
