@@ -35,6 +35,16 @@
       </select>
     </p>
 
+    <p>
+      <span>User Verification</span>
+      <select id="verification">
+        <option value="undefined" selected="selected">undefined</option>
+        <option value="required">required</option>
+        <option value="preferred">preferred</option>
+        <option value="discouraged">discouraged</option>
+      </select>
+    </p>
+
     <button onclick="attestation()">Attestation</button>
     <p id="attestation-res">Attestation?</p>
     <pre><code id="attestation-data"></code></pre>
@@ -159,13 +169,23 @@
             // RS512 (not recommended)
             'alg': -259
           }],
+          authenticatorSelection: {
+            requireResidentKey: false,
+          },
         };
 
         const authenticator = selected('authenticator');
         if (authenticator !== 'any') {
-          publicKeyCredentialCreationOptions.authenticatorSelection = {
-            authenticatorAttachment: authenticator,
-          };
+          publicKeyCredentialCreationOptions
+            .authenticatorSelection.
+            authenticatorAttachment = authenticator;
+        }
+
+        const verification = selected('verification');
+        if (verification !== 'undefined') {
+          publicKeyCredentialCreationOptions
+            .authenticatorSelection.
+            userVerification = verification;
         }
 
         const attestation = selected('attestation');
