@@ -61,6 +61,13 @@
 
     <p>ID: <input id="id"/></p>
 
+    <p id="transports">
+      <label><input type="checkbox" checked name="usb">USB</label>
+      <label><input type="checkbox" checked name="nfc">NFC</label>
+      <label><input type="checkbox" checked name="ble">BLE</label>
+      <label><input type="checkbox" checked name="internal">Internal</label>
+    </p>
+
     <button onclick="assertion()">Assertion</button>
     <p id="assertion-res">Assertion?</p>
     <pre><code id="assertion-data"></code></pre>
@@ -223,8 +230,12 @@
           document.getElementById('attestation-res').textContent = `Attestation supported, challenge: ${arrayBufferToBase64URLString(challenge)}`;
           document.getElementById('attestation-data').textContent = JSON.stringify(arrayBufferToJSON(credential.response.clientDataJSON), null, '  ');
           if (credential.response.getTransports) {
-            document.getElementById('attestation-transports').textContent = `Attestation transports ${credential.response.getTransports()}`;
-            document.getElementById('attestation-transports').dataset.transports = JSON.stringify(credential.response.getTransports());
+            const transports = credential.response.getTransports();
+            document.getElementById('attestation-transports').textContent = `Attestation transports: ${transports}`;
+            console.log('getTransports:', transports);
+            for (const checkbox of document.getElementById('transports').getElementsByTagName('input')) {
+              checkbox.checked = transports.includes(checkbox.name);
+            }
           }
         } catch (err) {
           console.error('attestation error:', err);
@@ -250,9 +261,9 @@
           id: base64URLStringToArrayBuffer(document.getElementById('id').value),
         };
 
-        if (document.getElementById('attestation-transports').dataset.transports) {
-          allowCredential.transports = JSON.parse(document.getElementById('attestation-transports').dataset.transports);
-        }
+        allowCredential.transports = Array.from(document.getElementById('transports').getElementsByTagName('input'))
+          .filter(item => item.checked)
+          .map(item => item.name);
 
         const publicKeyCredentialRequestOptions = {
           challenge,
