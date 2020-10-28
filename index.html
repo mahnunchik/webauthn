@@ -57,6 +57,7 @@
     <button onclick="attestation()">Attestation</button>
     <p id="attestation-res">Attestation?</p>
     <pre><code id="attestation-data"></code></pre>
+    <pre><code id="attestation-transports"></code></pre>
 
     <p>ID: <input id="id"/></p>
 
@@ -221,6 +222,10 @@
           document.getElementById('id').value = credential.id;
           document.getElementById('attestation-res').textContent = `Attestation supported, challenge: ${arrayBufferToBase64URLString(challenge)}`;
           document.getElementById('attestation-data').textContent = JSON.stringify(arrayBufferToJSON(credential.response.clientDataJSON), null, '  ');
+          if (credential.response.getTransports) {
+            document.getElementById('attestation-transports').textContent = `Attestation transports ${credential.response.getTransports()}`;
+            document.getElementById('attestation-transports').dataset.transports = JSON.stringify(credential.response.getTransports());
+          }
         } catch (err) {
           console.error('attestation error:', err);
 
@@ -240,13 +245,19 @@
         window.crypto.getRandomValues(challenge);
         console.log('assertion challenge:', arrayBufferToBase64URLString(challenge));
 
+        const allowCredential = {
+          type: 'public-key',
+          id: base64URLStringToArrayBuffer(document.getElementById('id').value),
+        };
+
+        if (document.getElementById('attestation-transports').dataset.transports) {
+          allowCredential.transports = JSON.parse(document.getElementById('attestation-transports').dataset.transports);
+        }
+
         const publicKeyCredentialRequestOptions = {
           challenge,
           timeout: 60 * 1000,
-          allowCredentials: [{
-            id: base64URLStringToArrayBuffer(document.getElementById('id').value),
-            type: 'public-key',
-          }],
+          allowCredentials: [allowCredential],
         };
 
         console.log('publicKeyCredentialRequestOptions:', publicKeyCredentialRequestOptions);
